@@ -59,29 +59,50 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-bubble-sent: var(--bubble-sent);
+  --color-bubble-sent-foreground: var(--bubble-sent-foreground);
+  --color-bubble-received: var(--bubble-received);
+  --color-bubble-received-foreground: var(--bubble-received-foreground);
+  --color-chat-bg: var(--chat-bg);
 }
 
 :root {
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --radius: 1rem;
+  /* WhatsApp-like green theme — primary #1A7A4A */
+  --background: oklch(0.98 0.005 150);
+  --foreground: oklch(0.22 0.02 160);
   --card: oklch(1 0 0);
-  --card-foreground: oklch(0.129 0.042 264.695);
+  --card-foreground: oklch(0.22 0.02 160);
   --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
-  --secondary: oklch(0.968 0.007 247.896);
-  --secondary-foreground: oklch(0.208 0.042 265.755);
-  --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
-  --accent: oklch(0.968 0.007 247.896);
-  --accent-foreground: oklch(0.208 0.042 265.755);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
-  --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
+  --popover-foreground: oklch(0.22 0.02 160);
+  --primary: oklch(0.48 0.12 152);
+  --primary-foreground: oklch(0.99 0.005 150);
+  --primary-glow: oklch(0.58 0.13 150);
+  --secondary: oklch(0.94 0.02 150);
+  --secondary-foreground: oklch(0.3 0.05 155);
+  --muted: oklch(0.95 0.012 150);
+  --muted-foreground: oklch(0.5 0.02 155);
+  --accent: oklch(0.9 0.04 150);
+  --accent-foreground: oklch(0.28 0.05 155);
+  --destructive: oklch(0.6 0.22 25);
+  --destructive-foreground: oklch(0.99 0.005 60);
+  --border: oklch(0.9 0.012 150);
+  --input: oklch(0.94 0.012 150);
+  --ring: oklch(0.48 0.12 152);
+
+  /* Chat bubbles — WhatsApp style */
+  --bubble-sent: oklch(0.88 0.08 150);
+  --bubble-sent-foreground: oklch(0.22 0.02 160);
+  --bubble-received: oklch(1 0 0);
+  --bubble-received-foreground: oklch(0.22 0.02 160);
+  --chat-bg: oklch(0.95 0.015 145);
+
+  /* Gradients & shadows */
+  --gradient-warm: linear-gradient(135deg, oklch(0.48 0.12 152), oklch(0.58 0.13 150));
+  --gradient-soft: linear-gradient(180deg, oklch(0.98 0.005 150), oklch(0.92 0.02 150));
+  --shadow-soft: 0 8px 24px -8px oklch(0.48 0.12 152 / 0.3);
+  --shadow-bubble: 0 1px 1.5px oklch(0.22 0.02 160 / 0.12);
+  --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
