@@ -464,6 +464,108 @@ function ChatLayout() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Rename contact dialog */}
+      <Dialog
+        open={!!renameTarget}
+        onOpenChange={(open) => !open && setRenameTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Contact rename करें</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!renameTarget) return;
+              const name = renameValue.trim();
+              if (!name) {
+                toast.error("नाम खाली नहीं हो सकता");
+                return;
+              }
+              setRenameSaving(true);
+              try {
+                await updateDoc(
+                  doc(db, "users", user.uid, "contacts", renameTarget.uid),
+                  { displayName: name },
+                );
+                toast.success("Rename हो गया ✨");
+                setRenameTarget(null);
+              } catch {
+                toast.error("Rename नहीं हो पाया");
+              } finally {
+                setRenameSaving(false);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="renameInput">नया नाम</Label>
+              <Input
+                id="renameInput"
+                value={renameValue}
+                onChange={(e) => setRenameValue(e.target.value)}
+                placeholder="Contact का नाम"
+                required
+                autoFocus
+              />
+              <p className="text-xs text-muted-foreground">
+                सिर्फ़ आपकी contact list में बदलेगा
+              </p>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={renameSaving} className="w-full">
+                {renameSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save करें
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete contact confirm */}
+      <Dialog
+        open={!!deleteTarget}
+        onOpenChange={(open) => !open && setDeleteTarget(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Contact delete करें?</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-foreground">{deleteTarget?.displayName}</span> आपकी
+            contact list से हट जाएँगे। पुराने messages नहीं मिटेंगे।
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteTarget(null)}
+              className="flex-1"
+            >
+              रहने दें
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              onClick={async () => {
+                if (!deleteTarget) return;
+                try {
+                  await deleteDoc(
+                    doc(db, "users", user.uid, "contacts", deleteTarget.uid),
+                  );
+                  toast.success("Contact हटा दिया");
+                  setDeleteTarget(null);
+                } catch {
+                  toast.error("Delete नहीं हो पाया");
+                }
+              }}
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
