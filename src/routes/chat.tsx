@@ -66,6 +66,12 @@ function ChatLayout() {
   const [statusComposerOpen, setStatusComposerOpen] = useState(false);
   const [statusViewUid, setStatusViewUid] = useState<string | null>(null);
 
+  // Settings dialogs
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate({ to: "/auth" });
