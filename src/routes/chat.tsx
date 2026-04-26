@@ -26,6 +26,9 @@ import {
 import { Label } from "@/components/ui/label";
 import { MessageCircle, LogOut, Search, Loader2, UserPlus } from "lucide-react";
 import { toast } from "sonner";
+import { StatusBar } from "@/components/status/StatusBar";
+import { StatusComposer } from "@/components/status/StatusComposer";
+import { StatusViewer } from "@/components/status/StatusViewer";
 
 export type Contact = {
   uid: string;
@@ -49,6 +52,10 @@ function ChatLayout() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newPhone, setNewPhone] = useState("+91");
   const [adding, setAdding] = useState(false);
+
+  // Status state
+  const [statusComposerOpen, setStatusComposerOpen] = useState(false);
+  const [statusViewUid, setStatusViewUid] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
