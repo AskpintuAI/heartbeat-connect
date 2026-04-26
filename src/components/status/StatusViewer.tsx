@@ -185,8 +185,7 @@ export function StatusViewer({ uid, onClose }: Props) {
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent
-        className="max-w-md p-0 gap-0 overflow-hidden bg-background border-0 sm:rounded-3xl"
-        showCloseButton={false}
+        className="max-w-md p-0 gap-0 overflow-hidden bg-background border-0 sm:rounded-3xl [&>button]:z-30 [&>button]:text-white [&>button]:bg-black/40 [&>button]:rounded-full [&>button]:p-1.5 [&>button]:opacity-80 [&>button]:right-3 [&>button]:top-12"
       >
         <DialogTitle className="sr-only">Status viewer</DialogTitle>
         {!current ? (
