@@ -270,6 +270,9 @@ function ChatLayout() {
       <section className={`${inChatDetail ? "flex" : "hidden md:flex"} flex-1 flex-col`}>
         <Outlet />
       </section>
+
+      <StatusComposer open={statusComposerOpen} onOpenChange={setStatusComposerOpen} />
+      <StatusViewer uid={statusViewUid} onClose={() => setStatusViewUid(null)} />
     </div>
   );
 }
