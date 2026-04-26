@@ -331,6 +331,73 @@ function ChatLayout() {
 
       <StatusComposer open={statusComposerOpen} onOpenChange={setStatusComposerOpen} />
       <StatusViewer uid={statusViewUid} onClose={() => setStatusViewUid(null)} />
+
+      {/* Profile edit dialog */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profile edit करें</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const name = editName.trim();
+              if (!name) {
+                toast.error("नाम खाली नहीं हो सकता");
+                return;
+              }
+              setSavingName(true);
+              try {
+                await updateDoc(doc(db, "users", user.uid), { displayName: name });
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("pendingDisplayName", name);
+                }
+                await refreshProfile();
+                toast.success("Profile update हो गया ✨");
+                setProfileOpen(false);
+              } catch (err) {
+                console.error(err);
+                toast.error("Update नहीं हो पाया");
+              } finally {
+                setSavingName(false);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="editName">आपका नाम</Label>
+              <Input
+                id="editName"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="आपका नाम"
+                required
+              />
+              <p className="text-xs text-muted-foreground">Phone: {user.phone}</p>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={savingName} className="w-full">
+                {savingName && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save करें
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* About dialog */}
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>माँ से बात के बारे में</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>अपनों से जुड़े रहें — एक warm, real-time chat app।</p>
+            <p>Features: Real-time chat, Status (12 घंटे), Voice messages, Photos, Videos, Files।</p>
+            <p className="text-xs pt-2 border-t border-border">Version 1.0 · ❤️ से बना</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
