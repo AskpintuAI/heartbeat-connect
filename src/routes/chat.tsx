@@ -97,6 +97,7 @@ function ChatLayout() {
           uid: d.id,
           displayName: (d.data().displayName as string) ?? "साथी",
           phone: (d.data().phone as string) ?? "",
+          blocked: (d.data().blocked as boolean) ?? false,
         }));
         list.sort((a, b) => a.displayName.localeCompare(b.displayName));
         setContacts(list);
