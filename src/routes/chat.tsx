@@ -74,6 +74,12 @@ function ChatLayout() {
   const [editName, setEditName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
+  // Contact actions
+  const [renameTarget, setRenameTarget] = useState<Contact | null>(null);
+  const [renameValue, setRenameValue] = useState("");
+  const [renameSaving, setRenameSaving] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Contact | null>(null);
+
   useEffect(() => {
     if (!loading && !user) {
       navigate({ to: "/auth" });
