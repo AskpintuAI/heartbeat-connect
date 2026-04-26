@@ -307,11 +307,11 @@ function ChatLayout() {
           ) : (
             <ul>
               {filtered.map((p) => (
-                <li key={p.uid}>
+                <li key={p.uid} className="relative group border-b border-border/50">
                   <Link
                     to="/chat/$peerId"
                     params={{ peerId: p.uid }}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted/60 transition-colors border-b border-border/50"
+                    className="flex items-center gap-3 px-4 py-3 pr-12 hover:bg-muted/60 transition-colors"
                     activeProps={{ className: "bg-accent/40" }}
                   >
                     <Avatar className="w-11 h-11">
@@ -323,10 +323,67 @@ function ChatLayout() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-foreground truncate">{p.displayName}</p>
+                      <p className="font-medium text-foreground truncate flex items-center gap-1.5">
+                        {p.displayName}
+                        {p.blocked && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-destructive/15 text-destructive font-normal">
+                            Blocked
+                          </span>
+                        )}
+                      </p>
                       <p className="text-xs text-muted-foreground truncate">{p.phone}</p>
                     </div>
                   </Link>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 text-muted-foreground hover:text-foreground"
+                        aria-label={`${p.displayName} options`}
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-44">
+                      <DropdownMenuItem
+                        onClick={() => {
+                          setRenameValue(p.displayName);
+                          setRenameTarget(p);
+                        }}
+                      >
+                        <Pencil className="w-4 h-4 mr-2" />
+                        Rename करें
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={async () => {
+                          try {
+                            await updateDoc(
+                              doc(db, "users", user.uid, "contacts", p.uid),
+                              { blocked: !p.blocked },
+                            );
+                            toast.success(
+                              p.blocked ? "Unblock हो गया" : "Block कर दिया",
+                            );
+                          } catch {
+                            toast.error("नहीं हो पाया");
+                          }
+                        }}
+                      >
+                        <Ban className="w-4 h-4 mr-2" />
+                        {p.blocked ? "Unblock करें" : "Block करें"}
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        onClick={() => setDeleteTarget(p)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Delete करें
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </li>
               ))}
             </ul>
