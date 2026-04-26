@@ -44,6 +44,7 @@ export type Contact = {
   uid: string;
   displayName: string;
   phone: string;
+  blocked?: boolean;
 };
 
 export const Route = createFileRoute("/chat")({
