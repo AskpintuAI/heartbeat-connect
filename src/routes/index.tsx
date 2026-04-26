@@ -3,6 +3,7 @@ import { useEffect } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { MessageCircle, Lock, Zap } from "lucide-react";
+import logo from "@/assets/logo.png";
 
 export const Route = createFileRoute("/")({
   component: Index,
@@ -25,10 +26,16 @@ function Index() {
     >
       <div className="relative z-10 text-center max-w-md">
         <div
-          className="mx-auto mb-6 w-20 h-20 rounded-full flex items-center justify-center"
-          style={{ background: "var(--gradient-warm)", boxShadow: "var(--shadow-soft)" }}
+          className="mx-auto mb-6 w-28 h-28 rounded-3xl bg-card flex items-center justify-center p-2"
+          style={{ boxShadow: "var(--shadow-soft)" }}
         >
-          <MessageCircle className="w-10 h-10 text-primary-foreground" fill="currentColor" />
+          <img
+            src={logo}
+            alt="माँ से बात logo"
+            width={512}
+            height={512}
+            className="w-full h-full object-contain"
+          />
         </div>
         <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-3 tracking-tight">
           माँ से बात
