@@ -24,7 +24,16 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, LogOut, Search, Loader2, UserPlus } from "lucide-react";
+import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/status/StatusBar";
 import { StatusComposer } from "@/components/status/StatusComposer";
@@ -41,7 +50,7 @@ export const Route = createFileRoute("/chat")({
 });
 
 function ChatLayout() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -56,6 +65,12 @@ function ChatLayout() {
   // Status state
   const [statusComposerOpen, setStatusComposerOpen] = useState(false);
   const [statusViewUid, setStatusViewUid] = useState<string | null>(null);
+
+  // Settings dialogs
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [savingName, setSavingName] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -166,18 +181,54 @@ function ChatLayout() {
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async () => {
-              await signOut();
-              navigate({ to: "/" });
-            }}
-            className="text-primary-foreground hover:bg-card/20"
-            aria-label="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-card/20"
+                aria-label="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditName(user.displayName);
+                  setProfileOpen(true);
+                }}
+              >
+                <UserIcon className="w-4 h-4 mr-2" />
+                Profile edit करें
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info("Notifications जल्द आएँगी ✨")}>
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info("Privacy: सिर्फ़ contacts आपको देख सकते हैं")}>
+                <Shield className="w-4 h-4 mr-2" />
+                Privacy
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAboutOpen(true)}>
+                <Info className="w-4 h-4 mr-2" />
+                About
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut();
+                  navigate({ to: "/" });
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
         <div className="px-3 py-3 border-b border-border flex items-center gap-2">
@@ -280,6 +331,73 @@ function ChatLayout() {
 
       <StatusComposer open={statusComposerOpen} onOpenChange={setStatusComposerOpen} />
       <StatusViewer uid={statusViewUid} onClose={() => setStatusViewUid(null)} />
+
+      {/* Profile edit dialog */}
+      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Profile edit करें</DialogTitle>
+          </DialogHeader>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const name = editName.trim();
+              if (!name) {
+                toast.error("नाम खाली नहीं हो सकता");
+                return;
+              }
+              setSavingName(true);
+              try {
+                await updateDoc(doc(db, "users", user.uid), { displayName: name });
+                if (typeof window !== "undefined") {
+                  localStorage.setItem("pendingDisplayName", name);
+                }
+                await refreshProfile();
+                toast.success("Profile update हो गया ✨");
+                setProfileOpen(false);
+              } catch (err) {
+                console.error(err);
+                toast.error("Update नहीं हो पाया");
+              } finally {
+                setSavingName(false);
+              }
+            }}
+            className="space-y-4"
+          >
+            <div className="space-y-1.5">
+              <Label htmlFor="editName">आपका नाम</Label>
+              <Input
+                id="editName"
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                placeholder="आपका नाम"
+                required
+              />
+              <p className="text-xs text-muted-foreground">Phone: {user.phone}</p>
+            </div>
+            <DialogFooter>
+              <Button type="submit" disabled={savingName} className="w-full">
+                {savingName && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save करें
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* About dialog */}
+      <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>माँ से बात के बारे में</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>अपनों से जुड़े रहें — एक warm, real-time chat app।</p>
+            <p>Features: Real-time chat, Status (12 घंटे), Voice messages, Photos, Videos, Files।</p>
+            <p className="text-xs pt-2 border-t border-border">Version 1.0 · ❤️ से बना</p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
