@@ -50,7 +50,7 @@ export const Route = createFileRoute("/chat")({
 });
 
 function ChatLayout() {
-  const { user, loading, signOut } = useAuth();
+  const { user, loading, signOut, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [contacts, setContacts] = useState<Contact[]>([]);
