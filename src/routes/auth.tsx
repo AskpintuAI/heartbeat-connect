@@ -124,12 +124,15 @@ function AuthPage() {
       localStorage.setItem("pendingDisplayName", parsed.data.displayName);
 
       const verifier = createRecaptchaVerifier();
+      // Pre-render reCAPTCHA so failures surface BEFORE signInWithPhoneNumber
+      await verifier.render();
       const confirmation = await signInWithPhoneNumber(auth, parsed.data.phone, verifier);
       confirmationRef.current = confirmation;
       setStep("otp");
       toast.success("OTP भेज दिया गया 📱");
     } catch (err) {
-      toast.error(getOtpErrorMessage(err));
+      console.error("[OTP send failed]", err);
+      toast.error(getOtpErrorMessage(err), { duration: 8000 });
       resetRecaptcha();
     } finally {
       setLoading(false);
