@@ -181,18 +181,54 @@ function ChatLayout() {
               </p>
             </div>
           </div>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={async () => {
-              await signOut();
-              navigate({ to: "/" });
-            }}
-            className="text-primary-foreground hover:bg-card/20"
-            aria-label="Logout"
-          >
-            <LogOut className="w-4 h-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-primary-foreground hover:bg-card/20"
+                aria-label="Settings"
+              >
+                <Settings className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditName(user.displayName);
+                  setProfileOpen(true);
+                }}
+              >
+                <UserIcon className="w-4 h-4 mr-2" />
+                Profile edit करें
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info("Notifications जल्द आएँगी ✨")}>
+                <Bell className="w-4 h-4 mr-2" />
+                Notifications
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => toast.info("Privacy: सिर्फ़ contacts आपको देख सकते हैं")}>
+                <Shield className="w-4 h-4 mr-2" />
+                Privacy
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setAboutOpen(true)}>
+                <Info className="w-4 h-4 mr-2" />
+                About
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={async () => {
+                  await signOut();
+                  navigate({ to: "/" });
+                }}
+                className="text-destructive focus:text-destructive"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </header>
 
         <div className="px-3 py-3 border-b border-border flex items-center gap-2">
