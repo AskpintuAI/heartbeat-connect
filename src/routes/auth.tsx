@@ -221,6 +221,10 @@ function AuthPage() {
                 placeholder="+9198XXXXXXXX"
                 required
               />
+              <p className="text-[11px] text-muted-foreground">
+                Test number: <span className="font-mono">+91 70000 00001</span> · OTP{" "}
+                <span className="font-mono">123456</span> (Firebase Console में add करना होगा)
+              </p>
             </div>
             <Button type="submit" size="lg" className="w-full" disabled={loading}>
               {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
