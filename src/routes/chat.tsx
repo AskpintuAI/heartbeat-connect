@@ -226,6 +226,13 @@ function ChatLayout() {
           </Dialog>
         </div>
 
+        {/* Status strip */}
+        <StatusBar
+          contacts={contacts}
+          onAddStatus={() => setStatusComposerOpen(true)}
+          onOpenUser={(uid) => setStatusViewUid(uid)}
+        />
+
         <div className="flex-1 overflow-y-auto">
           {contactsLoading ? (
             <div className="flex items-center justify-center py-10">
