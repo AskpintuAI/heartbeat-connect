@@ -7,6 +7,7 @@
 import { initializeApp, getApps, getApp, type FirebaseOptions } from "firebase/app";
 import { getAuth, setPersistence, browserLocalPersistence } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 
 const firebaseConfig: FirebaseOptions = {
   apiKey: "AIzaSyCMb8ujtq5F8cmUDwvYBJ3pbYi_h9bQBSU",
@@ -22,6 +23,7 @@ const firebaseConfig: FirebaseOptions = {
 export const firebaseApp = getApps().length ? getApp() : initializeApp(firebaseConfig);
 export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
+export const storage = getStorage(firebaseApp);
 
 // Persist login across browser restarts (uses localStorage under the hood)
 if (typeof window !== "undefined") {
