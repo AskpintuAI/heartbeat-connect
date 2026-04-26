@@ -9,6 +9,8 @@ import {
   setDoc,
   onSnapshot,
   serverTimestamp,
+  deleteDoc,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -24,7 +26,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info } from "lucide-react";
+import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info, MoreVertical, Pencil, Trash2, Ban } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +35,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { updateDoc } from "firebase/firestore";
 import { toast } from "sonner";
 import { StatusBar } from "@/components/status/StatusBar";
 import { StatusComposer } from "@/components/status/StatusComposer";
