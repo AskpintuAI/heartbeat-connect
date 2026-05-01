@@ -207,37 +207,21 @@ function ChatLayout() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              <DropdownMenuLabel>Menu</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditName(user.displayName);
-                  setProfileOpen(true);
-                }}
-              >
-                <UserIcon className="w-4 h-4 mr-2" />
-                Profile edit करें
+              <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => toast.info("Notifications जल्द आएँगी ✨")}>
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPrivacyOpen(true)}>
-                <Shield className="w-4 h-4 mr-2" />
-                Privacy
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                 <Info className="w-4 h-4 mr-2" />
                 About
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setAccountDeleteOpen(true)}
-                className="text-destructive focus:text-destructive"
-              >
-                <UserX className="w-4 h-4 mr-2" />
-                Account delete करें
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   await signOut();
