@@ -70,14 +70,8 @@ function ChatLayout() {
   const [statusComposerOpen, setStatusComposerOpen] = useState(false);
   const [statusViewUid, setStatusViewUid] = useState<string | null>(null);
 
-  // Settings dialogs
-  const [profileOpen, setProfileOpen] = useState(false);
+  // About dialog
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [accountDeleteOpen, setAccountDeleteOpen] = useState(false);
-  const [accountDeleting, setAccountDeleting] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [savingName, setSavingName] = useState(false);
 
   // Contact actions
   const [renameTarget, setRenameTarget] = useState<Contact | null>(null);
