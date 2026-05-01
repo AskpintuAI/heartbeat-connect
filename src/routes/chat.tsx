@@ -26,9 +26,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info, MoreVertical, Pencil, Trash2, Ban, UserX } from "lucide-react";
-import { deleteUser } from "firebase/auth";
-import { auth } from "@/lib/firebase";
+import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, Bell, Info, MoreVertical, Pencil, Trash2, Ban } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -70,14 +68,8 @@ function ChatLayout() {
   const [statusComposerOpen, setStatusComposerOpen] = useState(false);
   const [statusViewUid, setStatusViewUid] = useState<string | null>(null);
 
-  // Settings dialogs
-  const [profileOpen, setProfileOpen] = useState(false);
+  // About dialog
   const [aboutOpen, setAboutOpen] = useState(false);
-  const [privacyOpen, setPrivacyOpen] = useState(false);
-  const [accountDeleteOpen, setAccountDeleteOpen] = useState(false);
-  const [accountDeleting, setAccountDeleting] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [savingName, setSavingName] = useState(false);
 
   // Contact actions
   const [renameTarget, setRenameTarget] = useState<Contact | null>(null);
@@ -207,37 +199,21 @@ function ChatLayout() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Settings</DropdownMenuLabel>
+              <DropdownMenuLabel>Menu</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => {
-                  setEditName(user.displayName);
-                  setProfileOpen(true);
-                }}
-              >
-                <UserIcon className="w-4 h-4 mr-2" />
-                Profile edit करें
+              <DropdownMenuItem onClick={() => navigate({ to: "/settings" })}>
+                <Settings className="w-4 h-4 mr-2" />
+                Settings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => toast.info("Notifications जल्द आएँगी ✨")}>
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setPrivacyOpen(true)}>
-                <Shield className="w-4 h-4 mr-2" />
-                Privacy
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setAboutOpen(true)}>
                 <Info className="w-4 h-4 mr-2" />
                 About
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={() => setAccountDeleteOpen(true)}
-                className="text-destructive focus:text-destructive"
-              >
-                <UserX className="w-4 h-4 mr-2" />
-                Account delete करें
-              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   await signOut();
@@ -410,59 +386,6 @@ function ChatLayout() {
       <StatusComposer open={statusComposerOpen} onOpenChange={setStatusComposerOpen} />
       <StatusViewer uid={statusViewUid} onClose={() => setStatusViewUid(null)} />
 
-      {/* Profile edit dialog */}
-      <Dialog open={profileOpen} onOpenChange={setProfileOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Profile edit करें</DialogTitle>
-          </DialogHeader>
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              const name = editName.trim();
-              if (!name) {
-                toast.error("नाम खाली नहीं हो सकता");
-                return;
-              }
-              setSavingName(true);
-              try {
-                await updateDoc(doc(db, "users", user.uid), { displayName: name });
-                if (typeof window !== "undefined") {
-                  localStorage.setItem("pendingDisplayName", name);
-                }
-                await refreshProfile();
-                toast.success("Profile update हो गया ✨");
-                setProfileOpen(false);
-              } catch (err) {
-                console.error(err);
-                toast.error("Update नहीं हो पाया");
-              } finally {
-                setSavingName(false);
-              }
-            }}
-            className="space-y-4"
-          >
-            <div className="space-y-1.5">
-              <Label htmlFor="editName">आपका नाम</Label>
-              <Input
-                id="editName"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                placeholder="आपका नाम"
-                required
-              />
-              <p className="text-xs text-muted-foreground">Phone: {user.phone}</p>
-            </div>
-            <DialogFooter>
-              <Button type="submit" disabled={savingName} className="w-full">
-                {savingName && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                Save करें
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
       {/* About dialog */}
       <Dialog open={aboutOpen} onOpenChange={setAboutOpen}>
         <DialogContent>
@@ -579,100 +502,6 @@ function ChatLayout() {
         </DialogContent>
       </Dialog>
 
-      {/* Privacy dialog */}
-      <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Privacy & Security</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <div className="p-3 rounded-lg bg-muted/60">
-              <p className="font-medium text-foreground mb-1">🔒 आपका data safe है</p>
-              <p className="text-xs">सिर्फ़ आपके contacts आपको देख और message कर सकते हैं।</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/60">
-              <p className="font-medium text-foreground mb-1">📱 Phone OTP login</p>
-              <p className="text-xs">कोई password नहीं — हर बार secure OTP से verify।</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/60">
-              <p className="font-medium text-foreground mb-1">🚫 Block / Unblock</p>
-              <p className="text-xs">किसी भी contact को कभी भी block कर सकते हैं।</p>
-            </div>
-            <div className="p-3 rounded-lg bg-muted/60">
-              <p className="font-medium text-foreground mb-1">🗑️ Status auto-delete</p>
-              <p className="text-xs">आपकी status 12 घंटे में अपने आप हट जाती है।</p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Account delete dialog */}
-      <Dialog open={accountDeleteOpen} onOpenChange={setAccountDeleteOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="text-destructive">Account delete करें?</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 text-sm text-muted-foreground">
-            <p>
-              आपका account हमेशा के लिए हट जाएगा। ये action वापस नहीं हो सकता।
-            </p>
-            <ul className="list-disc list-inside space-y-1 text-xs">
-              <li>आपकी profile delete हो जाएगी</li>
-              <li>आपके contacts से आप हट जाएँगे</li>
-              <li>दोबारा login करने पर नया account बनेगा</li>
-            </ul>
-          </div>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button
-              variant="outline"
-              onClick={() => setAccountDeleteOpen(false)}
-              className="flex-1"
-              disabled={accountDeleting}
-            >
-              रहने दें
-            </Button>
-            <Button
-              variant="destructive"
-              className="flex-1"
-              disabled={accountDeleting}
-              onClick={async () => {
-                setAccountDeleting(true);
-                try {
-                  // Delete profile doc (best-effort)
-                  try {
-                    await deleteDoc(doc(db, "users", user.uid));
-                  } catch {
-                    /* ignore */
-                  }
-                  if (auth.currentUser) {
-                    await deleteUser(auth.currentUser);
-                  }
-                  toast.success("Account delete हो गया");
-                  setAccountDeleteOpen(false);
-                  navigate({ to: "/" });
-                } catch (err) {
-                  const code = (err as { code?: string })?.code;
-                  if (code === "auth/requires-recent-login") {
-                    toast.error("Security के लिए दोबारा login करें, फिर try करें", {
-                      duration: 6000,
-                    });
-                    await signOut();
-                    navigate({ to: "/auth" });
-                  } else {
-                    toast.error("Delete नहीं हो पाया");
-                  }
-                } finally {
-                  setAccountDeleting(false);
-                }
-              }}
-            >
-              {accountDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <UserX className="w-4 h-4 mr-2" />
-              हाँ, delete करें
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
