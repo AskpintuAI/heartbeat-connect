@@ -26,7 +26,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info, MoreVertical, Pencil, Trash2, Ban } from "lucide-react";
+import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info, MoreVertical, Pencil, Trash2, Ban, UserX } from "lucide-react";
+import { deleteUser } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,6 +73,9 @@ function ChatLayout() {
   // Settings dialogs
   const [profileOpen, setProfileOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
+  const [accountDeleteOpen, setAccountDeleteOpen] = useState(false);
+  const [accountDeleting, setAccountDeleting] = useState(false);
   const [editName, setEditName] = useState("");
   const [savingName, setSavingName] = useState(false);
 
@@ -217,7 +222,7 @@ function ChatLayout() {
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info("Privacy: सिर्फ़ contacts आपको देख सकते हैं")}>
+              <DropdownMenuItem onClick={() => setPrivacyOpen(true)}>
                 <Shield className="w-4 h-4 mr-2" />
                 Privacy
               </DropdownMenuItem>
@@ -226,6 +231,13 @@ function ChatLayout() {
                 About
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setAccountDeleteOpen(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <UserX className="w-4 h-4 mr-2" />
+                Account delete करें
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   await signOut();
@@ -562,6 +574,101 @@ function ChatLayout() {
             >
               <Trash2 className="w-4 h-4 mr-2" />
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Privacy dialog */}
+      <Dialog open={privacyOpen} onOpenChange={setPrivacyOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Privacy & Security</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="font-medium text-foreground mb-1">🔒 आपका data safe है</p>
+              <p className="text-xs">सिर्फ़ आपके contacts आपको देख और message कर सकते हैं।</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="font-medium text-foreground mb-1">📱 Phone OTP login</p>
+              <p className="text-xs">कोई password नहीं — हर बार secure OTP से verify।</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="font-medium text-foreground mb-1">🚫 Block / Unblock</p>
+              <p className="text-xs">किसी भी contact को कभी भी block कर सकते हैं।</p>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/60">
+              <p className="font-medium text-foreground mb-1">🗑️ Status auto-delete</p>
+              <p className="text-xs">आपकी status 12 घंटे में अपने आप हट जाती है।</p>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Account delete dialog */}
+      <Dialog open={accountDeleteOpen} onOpenChange={setAccountDeleteOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-destructive">Account delete करें?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>
+              आपका account हमेशा के लिए हट जाएगा। ये action वापस नहीं हो सकता।
+            </p>
+            <ul className="list-disc list-inside space-y-1 text-xs">
+              <li>आपकी profile delete हो जाएगी</li>
+              <li>आपके contacts से आप हट जाएँगे</li>
+              <li>दोबारा login करने पर नया account बनेगा</li>
+            </ul>
+          </div>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setAccountDeleteOpen(false)}
+              className="flex-1"
+              disabled={accountDeleting}
+            >
+              रहने दें
+            </Button>
+            <Button
+              variant="destructive"
+              className="flex-1"
+              disabled={accountDeleting}
+              onClick={async () => {
+                setAccountDeleting(true);
+                try {
+                  // Delete profile doc (best-effort)
+                  try {
+                    await deleteDoc(doc(db, "users", user.uid));
+                  } catch {
+                    /* ignore */
+                  }
+                  if (auth.currentUser) {
+                    await deleteUser(auth.currentUser);
+                  }
+                  toast.success("Account delete हो गया");
+                  setAccountDeleteOpen(false);
+                  navigate({ to: "/" });
+                } catch (err) {
+                  const code = (err as { code?: string })?.code;
+                  if (code === "auth/requires-recent-login") {
+                    toast.error("Security के लिए दोबारा login करें, फिर try करें", {
+                      duration: 6000,
+                    });
+                    await signOut();
+                    navigate({ to: "/auth" });
+                  } else {
+                    toast.error("Delete नहीं हो पाया");
+                  }
+                } finally {
+                  setAccountDeleting(false);
+                }
+              }}
+            >
+              {accountDeleting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              <UserX className="w-4 h-4 mr-2" />
+              हाँ, delete करें
             </Button>
           </DialogFooter>
         </DialogContent>
