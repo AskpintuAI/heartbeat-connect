@@ -222,7 +222,7 @@ function ChatLayout() {
                 <Bell className="w-4 h-4 mr-2" />
                 Notifications
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => toast.info("Privacy: सिर्फ़ contacts आपको देख सकते हैं")}>
+              <DropdownMenuItem onClick={() => setPrivacyOpen(true)}>
                 <Shield className="w-4 h-4 mr-2" />
                 Privacy
               </DropdownMenuItem>
@@ -231,6 +231,13 @@ function ChatLayout() {
                 About
               </DropdownMenuItem>
               <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => setAccountDeleteOpen(true)}
+                className="text-destructive focus:text-destructive"
+              >
+                <UserX className="w-4 h-4 mr-2" />
+                Account delete करें
+              </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={async () => {
                   await signOut();
