@@ -26,7 +26,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info, MoreVertical, Pencil, Trash2, Ban } from "lucide-react";
+import { MessageCircle, LogOut, Search, Loader2, UserPlus, Settings, User as UserIcon, Bell, Shield, Info, MoreVertical, Pencil, Trash2, Ban, UserX } from "lucide-react";
+import { deleteUser } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 import {
   DropdownMenu,
   DropdownMenuContent,
