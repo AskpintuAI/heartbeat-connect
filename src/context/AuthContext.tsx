@@ -7,6 +7,8 @@ export type AppUser = {
   uid: string;
   phone: string;
   displayName: string;
+  photoURL: string;
+  bio: string;
 };
 
 type AuthContextValue = {
@@ -22,10 +24,15 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 async function loadProfile(fbUser: User): Promise<AppUser> {
   // Try Firestore profile first; fall back to localStorage name set during signup
   let displayName = "";
+  let photoURL = "";
+  let bio = "";
   try {
     const snap = await getDoc(doc(db, "users", fbUser.uid));
     if (snap.exists()) {
-      displayName = (snap.data().displayName as string) ?? "";
+      const data = snap.data();
+      displayName = (data.displayName as string) ?? "";
+      photoURL = (data.photoURL as string) ?? "";
+      bio = (data.bio as string) ?? "";
     }
   } catch {
     /* offline / rules — ignore */
@@ -37,6 +44,8 @@ async function loadProfile(fbUser: User): Promise<AppUser> {
     uid: fbUser.uid,
     phone: fbUser.phoneNumber ?? "",
     displayName: displayName || "नया साथी",
+    photoURL,
+    bio,
   };
 }
 
