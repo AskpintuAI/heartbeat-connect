@@ -1,13 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { deleteUser } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { auth, db, storage } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,7 @@ import {
   Loader2,
   Save,
   Trash2,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,9 +39,12 @@ function SettingsPage() {
 
   const [section, setSection] = useState<"profile" | "privacy" | "delete">("profile");
   const [editName, setEditName] = useState("");
+  const [editBio, setEditBio] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,7 +53,10 @@ function SettingsPage() {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (user) setEditName(user.displayName);
+    if (user) {
+      setEditName(user.displayName);
+      setEditBio(user.bio ?? "");
+    }
   }, [user]);
 
   if (loading || !user) {
@@ -66,7 +75,10 @@ function SettingsPage() {
     }
     setSavingName(true);
     try {
-      await updateDoc(doc(db, "users", user.uid), { displayName: name });
+      await updateDoc(doc(db, "users", user.uid), {
+        displayName: name,
+        bio: editBio.trim(),
+      });
       if (typeof window !== "undefined") {
         localStorage.setItem("pendingDisplayName", name);
       }
@@ -77,6 +89,61 @@ function SettingsPage() {
       toast.error("Update नहीं हो पाया");
     } finally {
       setSavingName(false);
+    }
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("सिर्फ़ image file चुनें");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image 5MB से छोटी होनी चाहिए");
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const ref = storageRef(storage, `avatars/${user.uid}/photo.${ext}`);
+      await uploadBytes(ref, file);
+      const url = await getDownloadURL(ref);
+      await updateDoc(doc(db, "users", user.uid), { photoURL: url });
+      await refreshProfile();
+      toast.success("Photo update हो गई ✨");
+    } catch (err) {
+      console.error(err);
+      toast.error("Photo upload नहीं हो पाया");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    if (!user || !user.photoURL) return;
+    setPhotoUploading(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), { photoURL: "" });
+      try {
+        // best-effort delete of stored files
+        for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+          try {
+            await deleteObject(storageRef(storage, `avatars/${user.uid}/photo.${ext}`));
+          } catch {
+            /* ignore individual */
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      await refreshProfile();
+      toast.success("Photo हटा दी");
+    } catch {
+      toast.error("Photo हट नहीं पाई");
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
@@ -180,22 +247,70 @@ function SettingsPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Avatar className="w-16 h-16">
-                  <AvatarFallback
-                    className="text-primary-foreground font-semibold text-xl"
-                    style={{ background: "var(--gradient-warm)" }}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar className="w-20 h-20">
+                    {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName} />}
+                    <AvatarFallback
+                      className="text-primary-foreground font-semibold text-2xl"
+                      style={{ background: "var(--gradient-warm)" }}
+                    >
+                      {user.displayName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={photoUploading}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow disabled:opacity-60"
+                    aria-label="Photo change करें"
                   >
-                    {user.displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
+                    {photoUploading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground truncate">
                     {user.displayName}
                   </p>
-                  <p className="text-sm text-muted-foreground">{user.phone}</p>
+                  <p className="text-sm text-muted-foreground truncate">{user.phone}</p>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={photoUploading}
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1" />
+                      {user.photoURL ? "बदलें" : "Photo जोड़ें"}
+                    </Button>
+                    {user.photoURL && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={handlePhotoDelete}
+                        disabled={photoUploading}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        हटाएँ
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoSelect}
+              />
 
               <div className="space-y-1.5">
                 <Label htmlFor="editName">आपका नाम</Label>
@@ -205,6 +320,20 @@ function SettingsPage() {
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="आपका नाम"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="editBio">Bio</Label>
+                <Textarea
+                  id="editBio"
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value.slice(0, 160))}
+                  placeholder="अपने बारे में कुछ लिखें..."
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {editBio.length}/160
+                </p>
               </div>
 
               <div className="space-y-1.5">
