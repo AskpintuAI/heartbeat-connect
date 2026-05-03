@@ -1,13 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { doc, updateDoc, deleteDoc } from "firebase/firestore";
 import { deleteUser } from "firebase/auth";
-import { auth, db } from "@/lib/firebase";
+import { ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
+import { auth, db, storage } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -23,6 +25,7 @@ import {
   Loader2,
   Save,
   Trash2,
+  Camera,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,9 +39,12 @@ function SettingsPage() {
 
   const [section, setSection] = useState<"profile" | "privacy" | "delete">("profile");
   const [editName, setEditName] = useState("");
+  const [editBio, setEditBio] = useState("");
   const [savingName, setSavingName] = useState(false);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [photoUploading, setPhotoUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -47,7 +53,10 @@ function SettingsPage() {
   }, [user, loading, navigate]);
 
   useEffect(() => {
-    if (user) setEditName(user.displayName);
+    if (user) {
+      setEditName(user.displayName);
+      setEditBio(user.bio ?? "");
+    }
   }, [user]);
 
   if (loading || !user) {
