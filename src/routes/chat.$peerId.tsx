@@ -99,6 +99,8 @@ function ChatRoom() {
   const [pendingType, setPendingType] = useState<AttachmentType | null>(null);
   const [uploading, setUploading] = useState(false);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
