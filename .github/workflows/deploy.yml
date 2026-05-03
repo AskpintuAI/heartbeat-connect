@@ -1,0 +1,57 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Build (static)
+        run: bun run build
+        env:
+          # Ensures relative asset paths so it works under /<repo>/ on Pages
+          VITE_BASE: ./
+
+      - name: Add SPA fallback (404 -> index.html)
+        run: |
+          if [ -f dist/index.html ]; then cp dist/index.html dist/404.html; fi
+          if [ -f .output/public/index.html ]; then cp .output/public/index.html .output/public/404.html; fi
+
+      - name: Pick output directory
+        id: out
+        run: |
+          if [ -d ".output/public" ]; then echo "dir=.output/public" >> $GITHUB_OUTPUT
+          elif [ -d "dist" ]; then echo "dir=dist" >> $GITHUB_OUTPUT
+          else echo "No build output found" && exit 1; fi
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ${{ steps.out.outputs.dir }}
+
+      - id: deploy
+        uses: actions/deploy-pages@v4
