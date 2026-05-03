@@ -390,7 +390,29 @@ function ChatRoom() {
           <h2 className="text-primary-foreground font-semibold truncate">{peer.displayName}</h2>
           <p className="text-primary-foreground/80 text-xs truncate">{peer.phone}</p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary-foreground hover:bg-card/20 shrink-0"
+              aria-label="Chat options"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onClick={() => setDeleteOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Chat clear करें
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
+
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-1">
         {messages.length === 0 ? (
