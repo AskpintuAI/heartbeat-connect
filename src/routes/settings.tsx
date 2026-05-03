@@ -75,7 +75,10 @@ function SettingsPage() {
     }
     setSavingName(true);
     try {
-      await updateDoc(doc(db, "users", user.uid), { displayName: name });
+      await updateDoc(doc(db, "users", user.uid), {
+        displayName: name,
+        bio: editBio.trim(),
+      });
       if (typeof window !== "undefined") {
         localStorage.setItem("pendingDisplayName", name);
       }
@@ -86,6 +89,61 @@ function SettingsPage() {
       toast.error("Update नहीं हो पाया");
     } finally {
       setSavingName(false);
+    }
+  };
+
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("सिर्फ़ image file चुनें");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image 5MB से छोटी होनी चाहिए");
+      return;
+    }
+    setPhotoUploading(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const ref = storageRef(storage, `avatars/${user.uid}/photo.${ext}`);
+      await uploadBytes(ref, file);
+      const url = await getDownloadURL(ref);
+      await updateDoc(doc(db, "users", user.uid), { photoURL: url });
+      await refreshProfile();
+      toast.success("Photo update हो गई ✨");
+    } catch (err) {
+      console.error(err);
+      toast.error("Photo upload नहीं हो पाया");
+    } finally {
+      setPhotoUploading(false);
+    }
+  };
+
+  const handlePhotoDelete = async () => {
+    if (!user || !user.photoURL) return;
+    setPhotoUploading(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), { photoURL: "" });
+      try {
+        // best-effort delete of stored files
+        for (const ext of ["jpg", "jpeg", "png", "webp"]) {
+          try {
+            await deleteObject(storageRef(storage, `avatars/${user.uid}/photo.${ext}`));
+          } catch {
+            /* ignore individual */
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      await refreshProfile();
+      toast.success("Photo हटा दी");
+    } catch {
+      toast.error("Photo हट नहीं पाई");
+    } finally {
+      setPhotoUploading(false);
     }
   };
 
