@@ -323,7 +323,40 @@ function ChatRoom() {
     }
   };
 
-  if (loading || !peer || !user) {
+  const handleDeleteChat = async () => {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      const roomId = chatRoomId(user.uid, peerId);
+      const msgsCol = collection(db, "chats", roomId, "messages");
+      const snap = await getDocs(msgsCol);
+      // Firestore batch limit = 500
+      const docs = snap.docs;
+      for (let i = 0; i < docs.length; i += 450) {
+        const batch = writeBatch(db);
+        docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+      try {
+        await deleteDoc(doc(db, "chats", roomId));
+      } catch {
+        await setDoc(
+          doc(db, "chats", roomId),
+          { lastMessage: "", updatedAt: serverTimestamp() },
+          { merge: true },
+        );
+      }
+      toast.success("Chat clear हो गयी");
+      setDeleteOpen(false);
+      navigate({ to: "/chat" });
+    } catch (err) {
+      console.error(err);
+      toast.error("Chat delete नहीं हो पायी");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
     return (
       <div className="h-full flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
