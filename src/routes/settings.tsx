@@ -314,6 +314,14 @@ function SettingsPage() {
         </main>
       </div>
 
+      <footer className="px-4 py-5 border-t border-border bg-card text-center space-y-1">
+        <p className="text-sm font-medium text-foreground">माँ से बात</p>
+        <p className="text-xs text-muted-foreground">App version: 1.0.0</p>
+        <p className="text-xs text-muted-foreground">
+          Designed by <span className="font-semibold text-foreground">AskPintuAI</span>
+        </p>
+      </footer>
+
       {/* Confirm delete */}
       <Dialog open={confirmDeleteOpen} onOpenChange={setConfirmDeleteOpen}>
         <DialogContent>
