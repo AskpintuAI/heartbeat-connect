@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import {
   doc,
   getDoc,
+  getDocs,
   collection,
   addDoc,
   query,
@@ -10,6 +11,8 @@ import {
   onSnapshot,
   serverTimestamp,
   setDoc,
+  deleteDoc,
+  writeBatch,
   type Timestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -32,7 +35,25 @@ import {
   Video,
   FileText,
   X,
+  MoreVertical,
+  Trash2,
 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { MessageAttachment } from "@/components/chat/MessageAttachment";
 import { AudioRecorder } from "@/components/chat/AudioRecorder";
@@ -78,6 +99,8 @@ function ChatRoom() {
   const [pendingType, setPendingType] = useState<AttachmentType | null>(null);
   const [uploading, setUploading] = useState(false);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -300,6 +323,40 @@ function ChatRoom() {
     }
   };
 
+  const handleDeleteChat = async () => {
+    if (!user) return;
+    setDeleting(true);
+    try {
+      const roomId = chatRoomId(user.uid, peerId);
+      const msgsCol = collection(db, "chats", roomId, "messages");
+      const snap = await getDocs(msgsCol);
+      // Firestore batch limit = 500
+      const docs = snap.docs;
+      for (let i = 0; i < docs.length; i += 450) {
+        const batch = writeBatch(db);
+        docs.slice(i, i + 450).forEach((d) => batch.delete(d.ref));
+        await batch.commit();
+      }
+      try {
+        await deleteDoc(doc(db, "chats", roomId));
+      } catch {
+        await setDoc(
+          doc(db, "chats", roomId),
+          { lastMessage: "", updatedAt: serverTimestamp() },
+          { merge: true },
+        );
+      }
+      toast.success("Chat clear हो गयी");
+      setDeleteOpen(false);
+      navigate({ to: "/chat" });
+    } catch (err) {
+      console.error(err);
+      toast.error("Chat delete नहीं हो पायी");
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   if (loading || !peer || !user) {
     return (
       <div className="h-full flex items-center justify-center bg-background">
@@ -333,7 +390,29 @@ function ChatRoom() {
           <h2 className="text-primary-foreground font-semibold truncate">{peer.displayName}</h2>
           <p className="text-primary-foreground/80 text-xs truncate">{peer.phone}</p>
         </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="text-primary-foreground hover:bg-card/20 shrink-0"
+              aria-label="Chat options"
+            >
+              <MoreVertical className="w-5 h-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48">
+            <DropdownMenuItem
+              onClick={() => setDeleteOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Chat clear करें
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </header>
+
 
       <div ref={scrollRef} className="flex-1 overflow-y-auto px-3 sm:px-6 py-4 space-y-1">
         {messages.length === 0 ? (
@@ -551,6 +630,31 @@ function ChatRoom() {
           </>
         )}
       </form>
+
+      <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>पूरी chat delete करें?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {peer.displayName} के साथ सारे messages हमेशा के लिए हट जाएँगे। ये काम वापस नहीं हो सकता।
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>रहने दें</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteChat();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
