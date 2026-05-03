@@ -247,22 +247,70 @@ function SettingsPage() {
                 </p>
               </div>
 
-              <div className="flex items-center gap-3">
-                <Avatar className="w-16 h-16">
-                  <AvatarFallback
-                    className="text-primary-foreground font-semibold text-xl"
-                    style={{ background: "var(--gradient-warm)" }}
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar className="w-20 h-20">
+                    {user.photoURL && <AvatarImage src={user.photoURL} alt={user.displayName} />}
+                    <AvatarFallback
+                      className="text-primary-foreground font-semibold text-2xl"
+                      style={{ background: "var(--gradient-warm)" }}
+                    >
+                      {user.displayName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={photoUploading}
+                    className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow disabled:opacity-60"
+                    aria-label="Photo change करें"
                   >
-                    {user.displayName.charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0">
+                    {photoUploading ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                </div>
+                <div className="min-w-0 flex-1">
                   <p className="font-medium text-foreground truncate">
                     {user.displayName}
                   </p>
-                  <p className="text-sm text-muted-foreground">{user.phone}</p>
+                  <p className="text-sm text-muted-foreground truncate">{user.phone}</p>
+                  <div className="flex gap-2 mt-2 flex-wrap">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={photoUploading}
+                    >
+                      <Camera className="w-3.5 h-3.5 mr-1" />
+                      {user.photoURL ? "बदलें" : "Photo जोड़ें"}
+                    </Button>
+                    {user.photoURL && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onClick={handlePhotoDelete}
+                        disabled={photoUploading}
+                        className="text-destructive hover:text-destructive"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 mr-1" />
+                        हटाएँ
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handlePhotoSelect}
+              />
 
               <div className="space-y-1.5">
                 <Label htmlFor="editName">आपका नाम</Label>
@@ -272,6 +320,20 @@ function SettingsPage() {
                   onChange={(e) => setEditName(e.target.value)}
                   placeholder="आपका नाम"
                 />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="editBio">Bio</Label>
+                <Textarea
+                  id="editBio"
+                  value={editBio}
+                  onChange={(e) => setEditBio(e.target.value.slice(0, 160))}
+                  placeholder="अपने बारे में कुछ लिखें..."
+                  rows={3}
+                />
+                <p className="text-xs text-muted-foreground text-right">
+                  {editBio.length}/160
+                </p>
               </div>
 
               <div className="space-y-1.5">
