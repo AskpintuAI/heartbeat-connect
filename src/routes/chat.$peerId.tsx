@@ -357,6 +357,7 @@ function ChatRoom() {
     }
   };
 
+  if (loading || !peer || !user) {
     return (
       <div className="h-full flex items-center justify-center bg-background">
         <Loader2 className="w-6 h-6 animate-spin text-primary" />
