@@ -1,0 +1,42 @@
+rules_version = '2';
+
+// माँ से बात — Storage Security Rules
+// Firebase Console → Storage → Rules → paste this → Publish
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+    function isImage() {
+      return request.resource.contentType.matches('image/.*');
+    }
+    function isUnder(maxMB) {
+      return request.resource.size < maxMB * 1024 * 1024;
+    }
+
+    // Profile photos: avatars/{uid}/photo.{ext}
+    match /avatars/{uid}/{file=**} {
+      allow read: if true; // public, so contacts can see
+      allow write: if isSelf(uid) && isImage() && isUnder(5);
+      allow delete: if isSelf(uid);
+    }
+
+    // Chat attachments: chat/{chatId}/{uid}/{file}
+    match /chat/{chatId}/{uid}/{file=**} {
+      allow read: if isSignedIn() && request.auth.uid in chatId.split('_');
+      allow write: if isSelf(uid) && isUnder(20);
+      allow delete: if isSelf(uid);
+    }
+
+    // Status media: status/{uid}/{file}
+    match /status/{uid}/{file=**} {
+      allow read: if isSignedIn();
+      allow write: if isSelf(uid) && isUnder(20);
+      allow delete: if isSelf(uid);
+    }
+  }
+}
