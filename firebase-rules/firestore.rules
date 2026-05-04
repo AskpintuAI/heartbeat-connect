@@ -1,0 +1,61 @@
+rules_version = '2';
+
+// माँ से बात — Firestore Security Rules
+// Firebase Console → Firestore Database → Rules → paste this → Publish
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isSelf(uid) {
+      return isSignedIn() && request.auth.uid == uid;
+    }
+
+    // User profiles (displayName, photoURL, bio, phone)
+    match /users/{uid} {
+      allow read: if isSignedIn();
+      allow create, update: if isSelf(uid);
+      allow delete: if isSelf(uid);
+    }
+
+    // Contacts saved by a user
+    match /users/{uid}/contacts/{contactId} {
+      allow read, write, delete: if isSelf(uid);
+    }
+
+    // Chat rooms — id = sorted "uidA_uidB"
+    match /chats/{chatId} {
+      function isMember() {
+        return isSignedIn() && request.auth.uid in chatId.split('_');
+      }
+      allow read, create, update, delete: if isMember();
+
+      // Messages inside a chat
+      match /messages/{msgId} {
+        allow read, create, update, delete:
+          if isSignedIn() && request.auth.uid in chatId.split('_');
+      }
+    }
+
+    // Status / stories (auto-delete after 12 hours via client)
+    match /status/{statusId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.resource.data.uid == request.auth.uid;
+      allow update, delete: if isSignedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    // Calls (audio / video signaling)
+    match /calls/{callId} {
+      allow read, write: if isSignedIn() &&
+        (request.auth.uid == resource.data.callerId ||
+         request.auth.uid == resource.data.calleeId ||
+         request.auth.uid == request.resource.data.callerId ||
+         request.auth.uid == request.resource.data.calleeId);
+
+      match /candidates/{candId} {
+        allow read, write: if isSignedIn();
+      }
+    }
+  }
+}
