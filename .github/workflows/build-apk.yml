@@ -18,8 +18,13 @@ jobs:
       - name: Setup Java 17
         uses: actions/setup-java@v4
         with:
-          java-version: "17"
+          java-version: '17'
           distribution: temurin
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
 
       - name: Install dependencies
         run: bun install
@@ -29,30 +34,43 @@ jobs:
         env:
           VITE_BASE: /
 
-      - name: Detect build output dir
-        id: outdir
+      - name: Detect and copy build output
         run: |
-          if [ -d ".output/public" ]; then echo "dir=.output/public" >> $GITHUB_OUTPUT
-          elif [ -d "dist" ]; then echo "dir=dist" >> $GITHUB_OUTPUT
-          else echo "No build output found" && exit 1; fi
+          if [ -d ".output/public" ]; then
+            cp -r .output/public dist
+          elif [ ! -d "dist" ]; then
+            echo "No build output found" && exit 1
+          fi
+          echo "Build output ready in dist/"
+          ls dist/
+
+      - name: Create Capacitor config
+        run: |
+          cat > capacitor.config.json << 'EOF'
+          {
+            "appId": "com.askpintuai.heartbeatconnect",
+            "appName": "Heartbeat Connect",
+            "webDir": "dist",
+            "server": {
+              "androidScheme": "https"
+            }
+          }
+          EOF
 
       - name: Install Capacitor
-        run: bun add @capacitor/core @capacitor/cli @capacitor/android
-
-      - name: Init Capacitor
-        run: bunx cap init "Heartbeat Connect" "com.askpintuai.heartbeatconnect" --web-dir ${{ steps.outdir.outputs.dir }}
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
       - name: Add Android platform
-        run: bunx cap add android
+        run: npx cap add android
 
       - name: Sync Capacitor
-        run: bunx cap sync android
+        run: npx cap sync android
 
       - name: Build Debug APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --no-daemon
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
