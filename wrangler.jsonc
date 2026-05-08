@@ -1,5 +1,4 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "heartbeat-connect",
   "compatibility_date": "2025-09-24",
   "compatibility_flags": [
