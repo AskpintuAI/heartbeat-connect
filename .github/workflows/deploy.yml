@@ -1,61 +1,33 @@
-name: Deploy to GitHub Pages
+name: Deploy to Cloudflare Pages
 
 on:
   push:
     branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 jobs:
-  build-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
+      
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
-
+      
       - name: Install dependencies
         run: bun install
-
-      - name: Build (static)
+      
+      - name: Build
         run: bun run build
         env:
           VITE_BASE: /
-
-      - name: Prepare output directory
-        run: |
-          if [ -d ".output/public" ]; then
-            echo "Using .output/public"
-            cp .output/public/index.html .output/public/404.html 2>/dev/null || true
-            echo "outdir=.output/public" >> $GITHUB_ENV
-          elif [ -d "dist" ]; then
-            echo "Using dist"
-            cp dist/index.html dist/404.html 2>/dev/null || true
-            echo "outdir=dist" >> $GITHUB_ENV
-          else
-            echo "No build output found" && exit 1
-          fi
-          echo "Output dir: $outdir"
-          ls $outdir | head -10
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
         with:
-          path: ${{ env.outdir }}
-
-      - id: deploy
-        uses: actions/deploy-pages@v4
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: heartbeat-connect
+          directory: dist/client
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
