@@ -33,7 +33,7 @@ jobs:
       - name: Build (static)
         run: bun run build
         env:
-          VITE_BASE: ./
+          VITE_BASE: /
 
       - name: Prepare output directory
         run: |
