@@ -1,6 +1,8 @@
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -33,21 +35,27 @@ jobs:
         env:
           VITE_BASE: ./
 
-      - name: Add SPA fallback (404 -> index.html)
+      - name: Prepare output directory
         run: |
-          if [ -f dist/index.html ]; then cp dist/index.html dist/404.html; fi
-
-      - name: Pick output directory
-        id: out
-        run: |
-          if [ -d ".output/public" ]; then echo "dir=.output/public" >> $GITHUB_OUTPUT
-          elif [ -d "dist" ]; then echo "dir=dist" >> $GITHUB_OUTPUT
-          else echo "No build output found" && exit 1; fi
+          if [ -d ".output/public" ]; then
+            echo "Using .output/public"
+            cp .output/public/index.html .output/public/404.html 2>/dev/null || true
+            echo "outdir=.output/public" >> $GITHUB_ENV
+          elif [ -d "dist" ]; then
+            echo "Using dist"
+            cp dist/index.html dist/404.html 2>/dev/null || true
+            echo "outdir=dist" >> $GITHUB_ENV
+          else
+            echo "No build output found" && exit 1
+          fi
+          echo "Output dir: $outdir"
+          ls $outdir | head -10
 
       - uses: actions/configure-pages@v5
+
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ steps.out.outputs.dir }}
+          path: ${{ env.outdir }}
 
       - id: deploy
         uses: actions/deploy-pages@v4
