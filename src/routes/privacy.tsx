@@ -112,10 +112,10 @@ function PrivacyPage() {
           <p>
             कोई सवाल हो तो email करें:{" "}
             <a
-              href="mailto:support@maasebaat.app"
+              href="mailto:pkpeeyush1@gmail.com"
               className="text-primary hover:underline"
             >
-              support@maasebaat.app
+              pkpeeyush1@gmail.com
             </a>
           </p>
         </Section>
