@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
@@ -19,6 +20,11 @@ import { Route as ChatPeerIdRouteImport } from './routes/chat.$peerId'
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatRoute = ChatRouteImport.update({
@@ -51,6 +57,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/chat/$peerId': typeof ChatPeerIdRoute
   '/chat/': typeof ChatIndexRoute
@@ -58,6 +65,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/chat/$peerId': typeof ChatPeerIdRoute
   '/chat': typeof ChatIndexRoute
@@ -67,20 +75,29 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/chat': typeof ChatRouteWithChildren
+  '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/chat/$peerId': typeof ChatPeerIdRoute
   '/chat/': typeof ChatIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/chat' | '/settings' | '/chat/$peerId' | '/chat/'
+  fullPaths:
+    | '/'
+    | '/auth'
+    | '/chat'
+    | '/privacy'
+    | '/settings'
+    | '/chat/$peerId'
+    | '/chat/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/auth' | '/settings' | '/chat/$peerId' | '/chat'
+  to: '/' | '/auth' | '/privacy' | '/settings' | '/chat/$peerId' | '/chat'
   id:
     | '__root__'
     | '/'
     | '/auth'
     | '/chat'
+    | '/privacy'
     | '/settings'
     | '/chat/$peerId'
     | '/chat/'
@@ -90,6 +107,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthRoute: typeof AuthRoute
   ChatRoute: typeof ChatRouteWithChildren
+  PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
 }
 
@@ -100,6 +118,13 @@ declare module '@tanstack/react-router' {
       path: '/settings'
       fullPath: '/settings'
       preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chat': {
@@ -156,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
   ChatRoute: ChatRouteWithChildren,
+  PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
 }
 export const routeTree = rootRouteImport
