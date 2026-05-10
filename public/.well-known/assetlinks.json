@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.askpintuai.maasebaat",
+        "sha256_cert_fingerprints": ["AA:42:A4:57:4D:8E:FB:B2:51:6A:77:C7:47:29:C5:8E:F8:7E:0F:64:66:BE:23:DB:B0:E9:9E:DD:CC:D1:CE:64"]
+      }
+    }]
